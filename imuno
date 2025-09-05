@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz de Imunologia - 40 Questões</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: #f0f4f7;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .quiz-container {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 30px;
+        width: 90%;
+        max-width: 900px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    h2 {
+        color: #333;
+    }
+    .options {
+        margin-top: 20px;
+    }
+    .option {
+        background: #e4ebf2;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 8px 0;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .option:hover {
+        background: #cbd6e3;
+    }
+    .option.correct {
+        background: #b6e2b6 !important;
+    }
+    .option.wrong {
+        background: #f5a6a6 !important;
+    }
+    .buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #4a90e2;
+        color: white;
+        font-size: 16px;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background: #357ab8;
+    }
+    .timer {
+        font-size: 18px;
+        margin-top: 10px;
+        color: #555;
+    }
+    .score {
+        margin-top: 20px;
+        font-weight: bold;
+        font-size: 18px;
+    }
+    .explanation {
+        margin-top: 15px;
+        font-style: italic;
+        color: #444;
+    }
+    .result-page {
+        text-align: center;
+    }
+    .result-page h2 {
+        font-size: 28px;
+    }
+</style>
+</head>
+<body>
+<div class="quiz-container" id="quizContainer">
+    <div id="quizContent">
+        <h2 id="question">Pergunta</h2>
+        <div class="options">
+            <div class="option" data-index="0"></div>
+            <div class="option" data-index="1"></div>
+            <div class="option" data-index="2"></div>
+            <div class="option" data-index="3"></div>
+        </div>
+        <div class="timer">Tempo restante: <span id="time">20</span>s</div>
+        <div class="explanation" id="explanation"></div>
+        <div class="buttons">
+            <button id="prevBtn">Anterior</button>
+            <button id="nextBtn">Próxima</button>
+            <button id="restartBtn">Reiniciar</button>
+        </div>
+        <div class="score" id="score">Pontuação: 0</div>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    {question: "O que caracteriza a imunidade adaptativa em contraste com a imunidade inata?", options:["Resposta rápida e inespecífica a microrganismos","Memória específica e resposta vigorosa a exposições repetidas","Proteção apenas mediada por barreiras físicas","Eliminação de tecidos danificados sem interação com antígenos"], answer:1, explanation:"A imunidade adaptativa é caracterizada por memória específica e respostas mais rápidas e intensas a exposições repetidas ao mesmo microrganismo."},
+    {question:"Qual célula é responsável principalmente pela imunidade humoral?", options:["Linfócito T citotóxico (CTL)","Macrófago","Linfócito B","Neutrófilo"], answer:2, explanation:"A imunidade humoral é mediada por anticorpos produzidos por plasmócitos derivados de linfócitos B."},
+    {question:"A imunidade passiva ocorre quando:", options:["O indivíduo produz seus próprios anticorpos após exposição","Anticorpos ou linfócitos são transferidos de outro indivíduo imune","O corpo ativa linfócitos T CD8+","Há ativação de fagócitos sem exposição a antígenos"], answer:1, explanation:"Na imunidade passiva, o indivíduo recebe anticorpos ou linfócitos de outro indivíduo previamente imunizado, sem gerar resposta ativa própria."},
+    {question:"Qual célula é um fagócito derivado de monócitos sanguíneos e desempenha papéis nas respostas inata e adaptativa?", options:["Neutrófilo","Macrófago","Basófilo","Plasmócito"], answer:1, explanation:"O macrófago é derivado de monócitos e realiza fagocitose, secreta citocinas e apresenta antígenos para células T."},
+    {question:"Qual célula medeia respostas imunes inatas para matar células infectadas sem expressão de receptores TCR ou Ig?", options:["Célula B madura","Linfócito T auxiliar","Célula NK","Célula dendrítica"], answer:2, explanation:"As células NK são linfócitos inatos que matam células infectadas diretamente e secretam IFN-γ sem receptores TCR ou Ig."},
+    {question:"A imunidade ativa é caracterizada por:", options:["Receber anticorpos de outra pessoa","Resposta adaptativa sem exposição ao antígeno","Exposição a antígeno e ativação de linfócitos pelo próprio indivíduo","Morte celular sem envolvimento de linfócitos"], answer:2, explanation:"Na imunidade ativa, o indivíduo é exposto ao antígeno e ativa seus linfócitos, participando ativamente da resposta imune."},
+    {question:"Qual é a principal função das células dendríticas clássicas?", options:["Produzir anticorpos","Fagocitar apenas vírus","Atuar como células-sentinela e APCs para linfócitos T","Eliminar hemácias envelhecidas"], answer:2, explanation:"Células dendríticas clássicas atuam como sentinelas, captam antígenos e apresentam para linfócitos T naive, iniciando a resposta adaptativa."},
+    {question:"O que caracteriza a imunidade inata?", options:["Específica e com memória","Resposta rápida e repetitiva similar a exposições múltiplas","Mediada apenas por anticorpos","Ativação exclusiva de linfócitos T"], answer:1, explanation:"A imunidade inata é rápida, pré-existente, e reage de forma similar a exposições repetidas, sem memória específica."},
+    {question:"Qual célula libera histamina e outros mediadores durante reações alérgicas imediatas?", options:["Neutrófilo","Mastócito","Macrófago","Célula B"], answer:1, explanation:"Mastócitos contêm grânulos com histamina e mediadores inflamatórios, liberando-os durante reações alérgicas imediatas."},
+    {question:"O que caracteriza um linfócito T naive?", options:["Já exposto ao antígeno","Produz anticorpos de forma ativa","Madura mas sem encontro prévio com antígeno","É um macrófago especializado"], answer:2, explanation:"Linfócitos T ou B naive são maduros, mas ainda não encontraram o antígeno, estando prontos para responder quando expostos."},
+    {question:"Qual é a função das plaquetas?", options:["Produção de anticorpos","Coagulação sanguínea","Fagocitose de microrganismos","Transporte de oxigênio"], answer:1, explanation:"As plaquetas são estruturas acelares essenciais na coagulação sanguínea e na manutenção da integridade vascular."},
+    {question:"O que é fagocitose?", options:["Produção de anticorpos","Englobar e degradar partículas grandes","Liberação de histamina","Ativação de linfócitos T"], answer:1, explanation:"Fagocitose é o processo pelo qual células como macrófagos e neutrófilos englobam partículas grandes e microrganismos para degradação."},
+    {question:"Qual é a função da medula óssea no sistema imune?", options:["Produzir anticorpos diretamente","Local de maturação final dos linfócitos T","Gerar todas as células sanguíneas, incluindo linfócitos B","Atuar como barreira epitelial"], answer:2, explanation:"A medula óssea produz todas as células sanguíneas, incluindo linfócitos B, enquanto os precursores de T migram para o timo."},
+    {question:"O que é apoptose?", options:["Crescimento celular descontrolado","Morte celular programada sem inflamação","Produção de anticorpos","Fagocitose de microrganismos"], answer:1, explanation:"Apoptose é morte celular programada, com ativação de caspases e degradação ordenada do DNA, sem inflamação."},
+    {question:"O que caracteriza a expansão clonal?", options:["Morte celular induzida por anticorpos","Multiplicação intensa de linfócitos específicos para um antígeno","Liberação de histamina por mastócitos","Produção de anticorpos naturais sem estímulo"], answer:1, explanation:"Expansão clonal é a proliferação intensa de linfócitos específicos para um antígeno, gerando células efetoras e memória."},
+    {question:"Qual célula é o principal mediador da imunidade celular adaptativa?", options:["Linfócito T","Neutrófilo","Célula B","Mastócito"], answer:0, explanation:"Linfócitos T (auxiliares CD4+ e citotóxicos CD8+) mediam a imunidade adaptativa celular, ativando fagócitos e matando células infectadas."},
+    {question:"O que são anticorpos naturais?", options:["Produzidos apenas após vacinação","IgM presentes sem exposição a antígeno","Liberados apenas por células T","Derivados de células NK"], answer:1, explanation:"Anticorpos naturais são IgM produzidos sem exposição evidente a antígenos, principalmente por células B-1."},
+    {question:"O que é epítopo?", options:["Parte do anticorpo que liga antígeno","Porção específica de um antígeno reconhecida pelo anticorpo ou TCR","Tipo de célula fagocítica","Molécula de sinalização de mastócitos"], answer:1, explanation:"Epítopo é a porção específica de um antígeno que se liga a anticorpos ou receptores de células T."},
+    {question:"Qual é a função do sistema complemento?", options:["Produzir linfócitos T","Potencializar destruição de células-alvo","Gerar anticorpos naturais","Ativar mastócitos diretamente"], answer:1, explanation:"O complemento é uma série de proteínas que amplificam a destruição de células-alvo e microrganismos."},
+    {question:"Qual célula atua na defesa contra parasitas extracelulares, incluindo helmintos?", options:["Eosinófilo","Neutrófilo","Macrófago","Célula B"], answer:0, explanation:"Eosinófilos combatem parasitas extracelulares e participam de respostas alérgicas tardias."},
+    {question:"O que caracteriza imunidade tumoral?", options:["Proteção contra microrganismos inativos","Proteção do corpo contra desenvolvimento de tumores pelo sistema imune","Resposta inflamatória crônica sem antígenos","Produção de IgM natural"], answer:1, explanation:"Imunidade tumoral envolve reconhecimento e destruição de células tumorais pelo sistema imune, incluindo linfócitos T."},
+    {question:"O que é a bainha linfoide periarteriolar (PALS)?", options:["Região do baço rica em células T","Parte do linfonodo com células B","Tejido epitelial externo","Local de maturação de neutrófilos"], answer:0, explanation:"A PALS é a região interna da polpa branca do baço contendo principalmente células T."},
+    {question:"Qual célula secreta anticorpos e é derivada de linfócitos B?", options:["Plasmócito","Neutrófilo","Célula NK","Macrófago"], answer:0, explanation:"Plasmócitos são linfócitos B diferenciados que secretam anticorpos específicos contra antígenos."},
+    {question:"Qual é a função das células T auxiliares (Th)?", options:["Ativar macrófagos, promover inflamação e induzir produção de anticorpos","Fagocitar microrganismos","Produzir anticorpos naturais","Matar células tumorais diretamente"], answer:0, explanation:"Células T auxiliares expressam CD4+ e secretam citocinas para ativar macrófagos, inflamar tecidos e induzir células B a produzir anticorpos."},
+    {question:"O que é linfa?", options:["Célula de defesa do sangue","Líquido intersticial que transporta antígenos e células dendríticas","Hormônio liberado por glândulas","Fragmento de anticorpo"], answer:1, explanation:"A linfa é líquida e transporta antígenos solúveis e células dendríticas para os linfonodos."},
+    {question:"O que é a imunidade neonatal?", options:["Imunidade ativa adquirida após vacina","Imunidade humoral passiva transmitida da mãe","Exposição direta a vírus pelo bebê","Produção de IgE pelos mastócitos"], answer:1, explanation:"Imunidade neonatal é a proteção fornecida por anticorpos maternos transportados via placenta ou leite."},
+    {question:"Qual célula T é responsável pela morte de células infectadas?", options:["T auxiliar CD4+","T citotóxico CD8+ (CTL)","Célula B","Neutrófilo"], answer:1, explanation:"CTLs CD8+ reconhecem antígenos em MHC I e promovem apoptose das células infectadas."},
+    {question:"Qual célula linfoide inata produz citocinas semelhantes às células Th?", options:["ILC (células linfoides inatas)","Neutrófilo","Célula B","Macrófago"], answer:0, explanation:"As ILCs produzem citocinas similares às Th, mas não possuem receptores específicos de antígenos."},
+    {question:"O que é um camundongo nocaute (knockout)?", options:["Camundongo sem sistema imune","Camundongo com gene alvo desativado","Camundongo geneticamente normal","Camundongo com imunidade passiva"], answer:1, explanation:"Camundongos nocautes têm genes específicos desativados para estudar funções biológicas e imunológicas."},
+    {question:"Qual célula é precursor direto de plasmócitos?", options:["Plasmablasto","Macrófago","Célula NK","Neutrófilo"], answer:0, explanation:"Plasmoblastos são células B ativadas que circulam e se diferenciam em plasmócitos produtores de anticorpos."},
+    {question:"O que são quimiocinas?", options:["Moléculas que induzem quimiotaxia de leucócitos","Anticorpos naturais","Citocinas apoptóticas","Receptores de mastócitos"], answer:0, explanation:"Quimiocinas são proteínas que atraem leucócitos para locais de inflamação ou imunidade."},
+    {question:"O que é imunidade mucosal?", options:["Proteção mediada apenas por IgG","Defesa localizada em mucosas por IgA e células linfoides","Resposta de células NK em órgãos profundos","Produção de anticorpos naturais sistêmicos"], answer:1, explanation:"Imunidade mucosal é mediada por IgA secretora e células linfoides associadas a mucosas, protegendo superfícies expostas."},
+    {question:"Qual célula inicia a resposta adaptativa apresentando antígenos?", options:["Célula NK","Célula dendrítica","Neutrófilo","Mastócito"], answer:1, explanation:"Células dendríticas captam antígenos nos tecidos e os apresentam para linfócitos T nos linfonodos."},
+    {question:"O que é tolerância imunológica?", options:["Resposta exagerada a antígenos","Falta de resposta a autoantígenos ou antígenos inócuos","Produção de IgE","Ativação de mastócitos sem antígeno"], answer:1, explanation:"Tolerância imunológica é a não resposta a antígenos próprios ou inofensivos, evitando autoimunidade."},
+    {question:"Qual citocina é fundamental na diferenciação de Th1?", options:["IL-4","IL-12","IL-10","TGF-β"], answer:1, explanation:"IL-12 induz a diferenciação de linfócitos T CD4+ em Th1, promovendo imunidade celular contra patógenos intracelulares."},
+    {question:"Qual é a função do receptor Toll-like (TLR)?", options:["Reconhecer padrões moleculares de microrganismos","Ativar células T CD8+ diretamente","Produzir anticorpos específicos","Induzir apoptose apenas em células tumorais"], answer:0, explanation:"TLRs são receptores da imunidade inata que reconhecem padrões moleculares conservados de patógenos e iniciam respostas inflamatórias."},
+    {question:"O que caracteriza células de memória?", options:["Resposta imune lenta e inespecífica","Resposta rápida e vigorosa após reexposição ao mesmo antígeno","Produzem histamina","Não participam de respostas adaptativas"], answer:1, explanation:"Células de memória geradas após a primeira exposição a um antígeno respondem rapidamente e de forma mais intensa em exposições subsequentes."},
+    {question:"Qual imunoglobulina é mais abundante na secreção mucosa?", options:["IgG","IgA","IgM","IgE"], answer:1, explanation:"IgA secretora é a principal imunoglobulina das mucosas, protegendo superfícies expostas a patógenos."}
+];
+
+let currentQuestion = 0;
+let score = 0;
+let timer;
+let timeLeft = 20;
+
+let questionEl = document.getElementById("question");
+let optionsEl = document.querySelectorAll(".option");
+let explanationEl = document.getElementById("explanation");
+let scoreEl = document.getElementById("score");
+let timeEl = document.getElementById("time");
+let nextBtn = document.getElementById("nextBtn");
+let prevBtn = document.getElementById("prevBtn");
+let restartBtn = document.getElementById("restartBtn");
+let quizContainer = document.getElementById("quizContainer");
+
+function shuffle(array){
+    for(let i = array.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function startTimer() {
+    clearInterval(timer);
+    timeLeft = 20;
+    timeEl.textContent = timeLeft;
+    timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+        if(timeLeft <= 0) {
+            clearInterval(timer);
+            explanationEl.textContent = "Tempo esgotado! " + quizData[currentQuestion].explanation;
+        }
+    }, 1000);
+}
+
+function loadQuestion() {
+    if(currentQuestion >= quizData.length){
+        showResult();
+        return;
+    }
+    const q = quizData[currentQuestion];
+    questionEl.textContent = `${currentQuestion + 1}. ${q.question}`;
+    optionsEl.forEach((optionEl, index) => {
+        optionEl.textContent = q.options[index];
+        optionEl.className = "option";
+    });
+    explanationEl.textContent = "";
+    startTimer();
+}
+
+function showResult(){
+    quizContainer.innerHTML = `
+        <div class="result-page">
+            <h2>Quiz Finalizado!</h2>
+            <p>Sua pontuação final é <strong>${score}</strong> pontos.</p>
+            <button id="restartFinalBtn">Reiniciar Quiz</button>
+        </div>
+    `;
+    document.getElementById("restartFinalBtn").addEventListener("click", restartQuiz);
+}
+
+function restartQuiz(){
+    currentQuestion = 0;
+    score = 0;
+    scoreEl.textContent = `Pontuação: ${score}`;
+    shuffle(quizData);
+    quizContainer.innerHTML = `
+    <div id="quizContent">
+        <h2 id="question"></h2>
+        <div class="options">
+            <div class="option" data-index="0"></div>
+            <div class="option" data-index="1"></div>
+            <div class="option" data-index="2"></div>
+            <div class="option" data-index="3"></div>
+        </div>
+        <div class="timer">Tempo restante: <span id="time">20</span>s</div>
+        <div class="explanation" id="explanation"></div>
+        <div class="buttons">
+            <button id="prevBtn">Anterior</button>
+            <button id="nextBtn">Próxima</button>
+            <button id="restartBtn">Reiniciar</button>
+        </div>
+        <div class="score" id="score">Pontuação: 0</div>
+    </div>
+    `;
+
+    // Reatribuir elementos e eventos
+    questionEl = document.getElementById("question");
+    optionsEl = document.querySelectorAll(".option");
+    explanationEl = document.getElementById("explanation");
+    scoreEl = document.getElementById("score");
+    timeEl = document.getElementById("time");
+    nextBtn = document.getElementById("nextBtn");
+    prevBtn = document.getElementById("prevBtn");
+    restartBtn = document.getElementById("restartBtn");
+
+    optionsEl.forEach(optionEl => {
+        optionEl.addEventListener("click", () => {
+            clearInterval(timer);
+            const selected = parseInt(optionEl.dataset.index);
+            const correct = quizData[currentQuestion].answer;
+            if(selected === correct) {
+                optionEl.classList.add("correct");
+                score += 10;
+                explanationEl.textContent = "Correto! " + quizData[currentQuestion].explanation;
+            } else {
+                optionEl.classList.add("wrong");
+                score -= 5;
+                explanationEl.textContent = "Errado! " + quizData[currentQuestion].explanation;
+            }
+            scoreEl.textContent = `Pontuação: ${score}`;
+        });
+    });
+
+    nextBtn.addEventListener("click", () => { currentQuestion++; loadQuestion(); });
+    prevBtn.addEventListener("click", () => { if(currentQuestion > 0){ currentQuestion--; loadQuestion(); } });
+    restartBtn.addEventListener("click", restartQuiz);
+
+    loadQuestion();
+}
+
+optionsEl.forEach(optionEl => {
+    optionEl.addEventListener("click", () => {
+        clearInterval(timer);
+        const selected = parseInt(optionEl.dataset.index);
+        const correct = quizData[currentQuestion].answer;
+        if(selected === correct) {
+            optionEl.classList.add("correct");
+            score += 10;
+            explanationEl.textContent = "Correto! " + quizData[currentQuestion].explanation;
+        } else {
+            optionEl.classList.add("wrong");
+            score -= 5;
+            explanationEl.textContent = "Errado! " + quizData[currentQuestion].explanation;
+        }
+        scoreEl.textContent = `Pontuação: ${score}`;
+    });
+});
+
+nextBtn.addEventListener("click", () => { currentQuestion++; loadQuestion(); });
+prevBtn.addEventListener("click", () => { if(currentQuestion > 0){ currentQuestion--; loadQuestion(); } });
+restartBtn.addEventListener("click", restartQuiz);
+
+// Embaralhar antes de iniciar
+shuffle(quizData);
+loadQuestion();
+</script>
+</body>
+</html>
